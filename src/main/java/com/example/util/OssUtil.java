@@ -68,7 +68,6 @@ public class OssUtil {
         PutObjectResult object = ossClient.putObject(bucketName, key, new File(filePath));
         // 设置URL过期时间为1小时
 
-
         //判断指定文件是否存在
         // boolean found = ossClient.doesObjectExist(bucketName, "C:\\Users\\MLOONG\\Desktop\\刘芳.pdf");
 
