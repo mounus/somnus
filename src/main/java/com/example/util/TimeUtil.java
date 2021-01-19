@@ -170,34 +170,30 @@ public class TimeUtil {
      *
      * @return String
      **/
-    public static List<List> getOneAllMonth() {
-        Integer year=2020;
-        SimpleDateFormat timeS = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式
-        String nowTime= timeS.format(new Date());
-        Integer year1=Integer.valueOf(nowTime.substring(0, 4).toString());
-        Integer month = Integer.valueOf(nowTime.substring(5, 7).toString());
+    public static List<List> getOneAllMonth(Integer year) {
+
         List<List> list=new ArrayList<>();
-        for (int i = year; i <=year1 ; i++) {
 
-            if (i==year1){
-                for (int j = 1; j <=month ; j++) {
-                    List<Integer> monthList=new ArrayList<>();
-                    monthList.add(i);
-                    monthList.add(j);
-                    list.add(monthList);
-                }
-            }else {
-
-                for (int j = 1; j < 13; j++) {
-                    List<Integer> monthList=new ArrayList<>();
-                    monthList.add(i);
-                    monthList.add(j);
-                    list.add(monthList);
-                }
-
+        for (int i = 1; i < 13; i++) {
+            String monthString = "";
+            String dayString = "";
+            List<String> monthList=new ArrayList<>();
+            if (i>10){
+                monthString=String.valueOf(i);
+            }else{
+                monthString="0"+String.valueOf(i);
             }
+            Integer day = dayByMonth(year, i);
+            dayString=String.valueOf(day);
+
+            String getFirstDay =String.valueOf(year)+"-"+monthString+"-"+"01";
+            String getLastDay =String.valueOf(year)+"-"+monthString+"-"+dayString;
+            monthList.add(getFirstDay);
+            monthList.add(getLastDay);
+            list.add(monthList);
 
         }
+
            return list;
     }
 

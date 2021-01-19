@@ -1099,7 +1099,7 @@ public class ExcelDaoImpl implements ExcelDao {
 
                 Integer onePrice = 0;//单价
 
-                if (rs.getInt("onePrice") != 0) {
+                if (rs.getInt("onePrice") != 0&&!rs.getString("timetype").equals("长期")) {
                     onePrice = rs.getInt("onePrice");
                 } else {
                     onePrice = rs.getInt("price") / rs.getInt("service_day");

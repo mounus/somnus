@@ -13,7 +13,8 @@ import lombok.Data;
 @ApiModel(description= "月嫂信息数据")
 public class MatornDto {
     private static final long serialVersionUID = 1L;
-
+    @ApiModelProperty(value = "月嫂id")
+    private  Integer mid;
     @ApiModelProperty(value = "来源1")
     private  String source;
     @ApiModelProperty(value = "1-机构名")

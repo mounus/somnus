@@ -22,6 +22,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SqlInOutParameter;
 import org.springframework.stereotype.Repository;
 
+import javax.transaction.Transactional;
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -127,31 +128,24 @@ public class MatornDaoImpl implements MatornDao {
     public List<Map<String, Object>> getById(Integer id) {
 
         List list = null;
-        StringBuilder sb = new StringBuilder();
+        StringBuffer sb = new StringBuffer();
 
-        sb.append("SELECT yx_matorn.id,yx_matorn.uid,yx_matorn.lid,yx_matorn.name,yx_matorn.idcard,yx_matorn.idcard_type,yx_matorn.born,yx_matorn.nation,yx_matorn.household,yx_matorn.educational,yx_matorn.marriage,yx_matorn.weight,yx_matorn.height,yx_matorn.address,yx_matorn.zodiac,yx_matorn.constellation,");
-        sb.append("yx_contact.phone,yx_contact.bank_card,yx_contact.bank_name,yx_contact.wechat,yx_contact.emergency_person,yx_contact.emergency_phone,yx_origin.source,yx_origin.institution_name,yx_origin.witness,yx_origin.witness_phone,yx_origin.other,yx_origin.introducer,yx_origin.introducer_phone,yx_bussiness.photo,yx_bussiness.charact,yx_bussiness.strength,");
-        sb.append("yx_bussiness.work_age,yx_bussiness.num,yx_bussiness.works,yx_bussiness.trains,yx_bussiness.qualification,yx_bussiness.grade,yx_bussiness.creat_time,yx_bussiness.day,yx_bussiness.identity,yx_bussiness.heathly,yx_bussiness.assess");
-        sb.append(" from yx_matorn ");
-        sb.append(" left JOIN yx_contact on (yx_matorn.id=yx_contact.mid) left JOIN yx_origin ON (yx_matorn.id=yx_origin.mid) left JOIN yx_bussiness on (yx_matorn.id=yx_bussiness.mid) where  yx_bussiness.isquit=0  and yx_matorn.id = ?");
-
+        sb.append("select m.id,m.uid,m.lid,m.name,m.idcard,m.idcard_type,m.born,m.nation,m.household,m.educational,m.marriage,m.weight,m.height,m.address,m.zodiac,m.constellation,");
+        sb.append("c.phone,c.bank_card,c.bank_name,c.wechat,c.emergency_person,c.emergency_phone,ori.source,ori.institution_name,ori.witness,ori.witness_phone,ori.other,ori.introducer,ori.introducer_phone,b.photo,b.charact,b.strength,");
+        sb.append("b.work_age,b.num,b.works,b.trains,b.qualification,b.grade,b.creat_time,b.day,b.identity,b.heathly,b.assess");
+        sb.append(" from yx_matorn m ");
+        sb.append(" left JOIN yx_contact c on (m.id=c.mid) left JOIN yx_origin ori ON (m.id=ori.mid) left JOIN yx_bussiness b on (m.id=b.mid) where  b.isquit=0  and m.id = ?");
         list = this.jdbcTemplate.query(sb.toString(), new RowMapper<Map<String, Object>>() {
-
             @Override
             public Map<String, Object> mapRow(ResultSet rs, int index) throws SQLException {
 
                 Map<String, Object> mp = new HashMap<String, Object>();
-
                 String birthTime = rs.getString("born");
-
                 Long age = getAge(birthTime);//得到年龄
-
                 String household = rs.getString("household");
 
                 String city = "";
                 if (household.length() > 3) {
-
-
                     String h1 = household.substring(0, 2);
                     String h2 = household.substring(3, 5);
                     city = h1 + h2;
@@ -414,6 +408,11 @@ public class MatornDaoImpl implements MatornDao {
 
     }
 
+    /**
+     * 身份证
+     * @param identity
+     * @return
+     */
     @SneakyThrows
     @Override
     public String getIdentity(String identity) {
@@ -1579,6 +1578,7 @@ public class MatornDaoImpl implements MatornDao {
         }
     }
 
+    @Transactional
     @Override
     public int addMatornDto(MatornDto matornDto) {
 
@@ -1592,9 +1592,18 @@ public class MatornDaoImpl implements MatornDao {
 
         String zodiac = getYear(year);
         String constellation = getConstellation(month, day);
+        String height=null;
+        String weight=null;
+        if (matornDto.getWeightHeight()==null||matornDto.getWeightHeight().isEmpty()||matornDto.getWeightHeight()==null){
 
-        String height=matornDto.getWeightHeight().substring(0, matornDto.getWeightHeight().indexOf("/"));
-        String weight=matornDto.getWeightHeight().substring(matornDto.getWeightHeight().indexOf("/")+1);;
+        }else {
+             height=matornDto.getWeightHeight().substring(0, matornDto.getWeightHeight().indexOf("/"));
+             weight=matornDto.getWeightHeight().substring(matornDto.getWeightHeight().indexOf("/")+1);;
+        }
+
+
+
+
 
         //添加月嫂信息
         String sql_addMatorn = "insert into yx_matorn(uid,lid,name, sex, born,nation,idcard,idcard_type,household,marriage,educational,weight,height,address,zodiac,constellation,idtype) " +
@@ -1619,19 +1628,22 @@ public class MatornDaoImpl implements MatornDao {
         //添加月嫂来源信息
         String sql_addOrigin = "insert into yx_origin(mid,source,institution_name,witness,witness_phone,other,introducer,introducer_phone) " +
                 "values(?,?,?,?,?,?,?,?)";
-        int states_addOrigin=jdbcTemplate.update(sql_addOrigin,mid,matornDto.getInstitution_name(),matornDto.getWitness(),matornDto.getWitness_phone(),matornDto.getOther(),matornDto.getIntroducer(),matornDto.getIntroducer_phone());
+        int states_addOrigin=jdbcTemplate.update(sql_addOrigin,mid,matornDto.getSource(),matornDto.getInstitution_name(),matornDto.getWitness(),matornDto.getWitness_phone(),matornDto.getOther(),matornDto.getIntroducer(),matornDto.getIntroducer_phone());
 
         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
         String creat_time = time.format(new Date());
 
         //添加月嫂业务信息
-        String sql_addBussiness = "insert into yx_bussiness(mid,photo,charact,work_age,works,trains,qualification,grade,creat_time,number,day,isorder,isblack,shelf,identity,heathly) " +
-                "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        String sql_addBussiness = "insert into yx_bussiness(mid,photo,charact,work_age,works,trains,qualification,grade,creat_time,number,day,isorder,isquit,isblack,shelf,identity,heathly) " +
+                "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         String grade="N";//默认N
         String number = getNumber(mid);
-        int states_addBussiness = this.jdbcTemplate.update(sql_addBussiness, mid, matornDto.getPhoto(), matornDto.getCharacter(),matornDto.getWork_age(), matornDto.getWorks(), matornDto.getTrains(), matornDto.getQualification(), grade, creat_time,number,0,0,0,0,matornDto.getIdentity(),matornDto.getHeathly() );
 
-        String sql_addPeriod = "insert into yx_period(mid,,rest) values(?,?)";
+
+
+        int states_addBussiness = this.jdbcTemplate.update(sql_addBussiness, mid, matornDto.getPhoto(), matornDto.getCharacter(),matornDto.getWork_age(), matornDto.getWorks(), matornDto.getTrains(), matornDto.getQualification(), grade, creat_time,number,0,0,0,0,0,matornDto.getIdentity(),matornDto.getHeathly() );
+
+        String sql_addPeriod = "insert into yx_period(mid,rest) values(?,?)";
         String rest = "[]";
         int states_addPeriod= this.jdbcTemplate.update(sql_addPeriod, mid, rest);
 
@@ -1649,6 +1661,25 @@ public class MatornDaoImpl implements MatornDao {
         List<Map<String, Object>> list=jdbcTemplate.queryForList(sql);
 
         return list;
+    }
+
+    @Override
+    public int isAdd(String json) {
+        JSONObject jsonObject = JSON.parseObject(json);//转换类型
+        String idcard=jsonObject.getString("idcard");
+        String sql_idcard = "select idcard from yx_matorn where idtype=1 ";
+        List<String> idcardlist = this.jdbcTemplate.queryForList(sql_idcard, String.class);
+        int states_id = 0;
+        for (int i = 0; i < idcardlist.size(); i++) {
+            if (idcard.equals(idcardlist.get(i))) {
+                states_id = 1;//有
+                break;
+            } else {
+                states_id = 0;//无
+            }
+
+        }
+        return states_id;
     }
 }
 

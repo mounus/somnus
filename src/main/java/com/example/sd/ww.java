@@ -62,13 +62,25 @@ public class ww {
 
     public static void main(String[] args) {
 
-        String ss="153cm/45kg";
-       String s= ss.substring(0, ss.indexOf("/"));//截取@之前的字符串
-        System.out.println("s = " + s);
-        String aa=ss.substring(ss.indexOf("/")+1);
-        System.out.println("aa = " + aa);
-        
-        
+        //__________冒泡排序
+        int[] ages = {21, 27, 31, 19, 50, 32, 16, 25};
+        System.out.println(Arrays.toString(ages));
+        //控制比较轮数
+        for (int i = 1; i < ages.length; i++) {
+            //每轮比较多少
+            for (int j = 0; j < ages.length - i; j++) {
+                if (ages[j] > ages[j + 1]) {
+                    int tmp = 0;
+                    tmp = ages[j];
+                    ages[j] = ages[j + 1];
+                    ages[j + 1] = tmp;
+                }
+            }
+        }
+        System.out.println(Arrays.toString(ages));
+        //_______________________
+
+
     }
 
 

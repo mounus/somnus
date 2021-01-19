@@ -50,7 +50,6 @@ public class ContactDaoImpl implements ContactDao {
         List<Object> queryList = new ArrayList<Object>();
 
 
-
         StringBuffer sb = new StringBuffer();
         sb.append("select yx_matorn.id from yx_matorn LEFT JOIN yx_contact  on(yx_matorn.id=yx_contact.mid) LEFT JOIN yx_bussiness  on(yx_matorn.id=yx_bussiness.mid) ");
         sb.append("LEFT JOIN yx_period  on (yx_matorn.id=yx_period.mid) where yx_bussiness.isorder =0 ");

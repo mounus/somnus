@@ -30,4 +30,18 @@ import static com.example.util.Year.*;
 @Repository
 public class TestDaoImpl implements TestDao {
 
+    @Autowired(required = false)
+    private JdbcTemplate jdbcTemplate;
+    @Override
+    public int importDeposit(String number) {
+        //修改押金状态
+//        String sql_isDeposit="update yx_bussiness set isDeposit=? where number=?";
+//        int states_isDeposit=jdbcTemplate.update(sql_isDeposit,1,number);
+
+        //修改质保金状态
+        String sql_isWarranty="update yx_bussiness set isWarranty=? where number=?";
+        int states_isWarranty=jdbcTemplate.update(sql_isWarranty,1,number);
+
+        return 0;
+    }
 }

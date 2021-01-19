@@ -15,21 +15,21 @@ public interface OriginDao {
      * @param: Origin
      * @return:
      */
-    int save(Origin origin);
+    int save(Origin origin);//del
 
     /**
      * @description: 修改一条数据
      * @param: Origin
      * @return:
      */
-    int update(Origin origin);
+    int update(Origin origin);//del
 
     /**
      * @description: 删除一条数据
      * @param: Origin
      * @return:
      */
-    int delete(Integer mid);
+    int delete(Integer mid);//del
 
     /**
      * @description: 删除一条数据

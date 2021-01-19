@@ -13,4 +13,8 @@ public class TestServiceImpl implements TestService {
     @Autowired(required = false)
     private TestDao testDao;
 
+    @Override
+    public int importDeposit(String number) {
+        return testDao.importDeposit(number);
+    }
 }

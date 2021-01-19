@@ -107,4 +107,9 @@ public class MatornServiceImpl implements MatornService {
     public List<Map<String,Object>> workAge() {
         return matornDao.workAge();
     }
+
+    @Override
+    public int isAdd(String json) {
+        return matornDao.isAdd(json);
+    }
 }

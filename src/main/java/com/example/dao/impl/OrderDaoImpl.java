@@ -661,7 +661,7 @@ public class OrderDaoImpl implements OrderDao {
                         String end_time = rs.getString("endtime");
 
                         Integer onePrice = 0;//单价
-                        if (rs.getInt("onePrice") != 0) {
+                        if (rs.getInt("onePrice") != 0&&!rs.getString("timetype").equals("长期")) {
                             onePrice = rs.getInt("onePrice");
                         } else {
                             onePrice = rs.getInt("price") / rs.getInt("service_day");
@@ -827,7 +827,7 @@ public class OrderDaoImpl implements OrderDao {
                 }
                 if (somnus.equals("居家服务")) {
                     Integer onePrice = 0;//单价
-                    if (rs.getInt("onePrice") != 0) {
+                    if (rs.getInt("onePrice") != 0&&!rs.getString("timetype").equals("长期")) {
                         onePrice = rs.getInt("onePrice");
                     } else {
                         onePrice = rs.getInt("price") / rs.getInt("service_day");
@@ -1075,7 +1075,7 @@ public class OrderDaoImpl implements OrderDao {
                         String end_time = rs.getString("endtime");
 
                         Integer onePrice = 0;//单价
-                        if (rs.getInt("onePrice") != 0) {
+                        if (rs.getInt("onePrice") != 0&&!rs.getString("timetype").equals("长期")) {
                             onePrice = rs.getInt("onePrice");
                         } else {
                             onePrice = rs.getInt("price") / rs.getInt("service_day");

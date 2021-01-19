@@ -12,66 +12,67 @@ import java.util.Map;
  * @return:
  */
 public interface MatornDao {
+
+
     /**
      * @description: 获取表中所有信息。
      * @return: java.util.List<com.example.entity.Matorn>
      */
-    List<Matorn> matonsList();
+    List<Matorn> matonsList();//del
 
     /**
      * @description: 通过id来查询月嫂所有相关的表
      * @param: id
      * @return: com.example.entity.Matorn/Origin/Contact/Bussiness
      */
-
-    List<Map<String,Object>> getById(Integer id);
+    List<Map<String,Object>> getById(Integer id);//del
 
     /**
      * @description: 通过name来查询信息
      * @param: name
      * @return: com.example.entity.Matorn
      */
-    Matorn findOne(String name);
+    Matorn findOne(String name);//del
 
     /**
      * @description: 向表中插入一条数据
      * @param: matorn
      *
      */
-    int save(Matorn matorn);
+    int save(Matorn matorn);//del
     /**
      * @description: 向表中插入一条数据
      * @param: matorn
      *
      */
-    int updateMatorn(Matorn matorn);
+    int updateMatorn(Matorn matorn);//del
     /**
      * @description: 更中数据
      * @param: matorn
      * @return:
      */
-    int update(String json);
+    int update(String json);//del
 
     /**
      * @description: 删除表中单条数据
      * @param: name
      * @return: void
      */
-    void del(String name);
+    void del(String name);//del
 
     /**
      * @description: 返回月嫂id
      * @param:
      * @return: id
      */
-    int getForId();
+    int getForId();//del
 
     /**
      * @description: 添加修改
      * @param: matorn
      *
      */
-    int saveOrUpdate(Matorn matorn);
+    int saveOrUpdate(Matorn matorn);//del
     /**
      * @description: 添加修改
      * @param: matorn
@@ -133,4 +134,11 @@ public interface MatornDao {
      *
      */
     List<Map<String, Object>>  workAge();
+
+    /**
+     * @description: 判断是否添加身份证
+     * @param:
+     *
+     */
+    int isAdd (String json);
 }

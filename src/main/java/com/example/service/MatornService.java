@@ -130,4 +130,10 @@ public interface MatornService {
      *
      */
     List<Map<String, Object>>  workAge();
+    /**
+     * @description: 判断是否添加身份证
+     * @param:
+     *
+     */
+    int isAdd (String json);
 }

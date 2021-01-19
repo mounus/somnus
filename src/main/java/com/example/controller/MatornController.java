@@ -396,6 +396,19 @@ public class MatornController {
 
         return matornService.workAge();
     }
+    /**
+     * uodate:(修信息). <br/>
+     * * @author Somnus
+     *     @return
+     */
+    @ApiOperation("判断手填的身份证是否添加")
+    @RequestMapping(value ="/isAdd", method = RequestMethod.POST)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "idcard", value = "身份证号码", required = false, dataType = "String", paramType = "query"),
+    })
+    public int isAdd(@RequestBody String json){
+        return matornService.isAdd(json);
+    }
 }
 
 

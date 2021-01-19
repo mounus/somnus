@@ -56,6 +56,84 @@ public class TestController {
     @Autowired(required = false)
     private StatisticsService statisticsService;
 
+    @ResponseBody
+    @ApiOperation("导入问题")
+    @RequestMapping(value = "/importDeposit", method = RequestMethod.POST)
+    public int addQustion() {
+
+        String excelPath = "C:\\Users\\MLOONG\\Desktop\\质保金.xlsx";
+        List<String> list = null;
+        try {
+            //String encoding = "GBK";
+            File excel = new File(excelPath);
+            if (excel.isFile() && excel.exists()) {   //判断文件是否存在
+
+                String[] split = excel.getName().split("\\.");  //.是特殊字符，需要转义！！！！！
+                Workbook wb = null;
+                //根据文件后缀（xls/xlsx）进行判断
+                if ("xls".equals(split[1])) {
+                    FileInputStream fis = new FileInputStream(excel);   //文件流对象
+                    wb = new HSSFWorkbook(fis);
+                } else if ("xlsx".equals(split[1])) {
+                    FileInputStream fis = new FileInputStream(excel);
+                    wb = new XSSFWorkbook(fis);
+                } else {
+                    System.out.println("文件类型错误!");
+                    return 0;
+                }
+
+                //开始解析
+                Sheet sheet = wb.getSheetAt(0);     //读取sheet 0
+
+                int firstRowIndex = sheet.getFirstRowNum() + 1;   //第一行是列名，所以不读
+                int lastRowIndex = sheet.getLastRowNum() + 1;
+
+                int i = 0;
+                for (int rIndex = firstRowIndex; rIndex < lastRowIndex; rIndex++) {   //遍历行
+                    // System.out.println("rIndex: " + rIndex);
+                    Row row = sheet.getRow(rIndex);
+                    if (row != null) {
+                        int firstCellIndex = row.getFirstCellNum();
+                        int lastCellIndex = row.getLastCellNum();
+
+
+                        String number = null;
+                        String name = null;
+                        for (int cIndex = firstCellIndex; cIndex < lastCellIndex; cIndex++) {   //遍历列
+                            Cell cell = row.getCell(cIndex);
+                            if (cell != null && !"".equals(cell.toString().trim())) {
+                                switch (cIndex) {
+
+                                    case 0:
+                                        number = cell.toString();
+                                        System.out.println("number:" + number);
+                                        break;
+                                    case 1:
+                                        name = cell.toString();
+                                        System.out.println("name:" + name);
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+
+                            }
+
+                        }
+                        testService.importDeposit(number);
+
+                    }
+                }
+
+            } else {
+                System.out.println("找不到指定的文件");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 }
 
 

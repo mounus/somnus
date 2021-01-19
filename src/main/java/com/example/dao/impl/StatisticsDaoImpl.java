@@ -270,7 +270,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
                 String end_time = rs.getString("endtime");
 
                 Integer onePrice = 0;//单价
-                if (rs.getInt("onePrice") != 0) {
+                if (rs.getInt("onePrice") != 0&&!rs.getString("timetype").equals("长期")) {
                     onePrice = rs.getInt("onePrice");
                 } else {
                     onePrice = rs.getInt("price") / rs.getInt("service_day");
@@ -367,6 +367,8 @@ public class StatisticsDaoImpl implements StatisticsDao {
         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式
         String nowTime = time.format(new Date());
 
+        SimpleDateFormat time1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+        String creat_time = time1.format(new Date());
         //当前时间的年月
         Integer nowMonth = Integer.valueOf(nowTime.substring(5, 7).toString());
         Integer nowYear = Integer.valueOf(nowTime.substring(0, 4).toString());
@@ -606,9 +608,9 @@ public class StatisticsDaoImpl implements StatisticsDao {
                         } else {
                             sql_allClubTruePrice = sql_allClubTruePrice + club_sumTruePrice;
                             sql_allHomeTruePrice = sql_allHomeTruePrice + home_sumTruePrice;
-                            String sql_add_orderStatistics = "insert into yx_orderStatistics(club,home,allPrice,s_time) values(?,?,?,?)";
+                            String sql_add_orderStatistics = "insert into yx_orderStatistics(club,home,allPrice,s_time,creat_time) values(?,?,?,?,?)";
                             sql_allTruePrice = sql_allClubTruePrice + sql_allHomeTruePrice;
-                            int states_add_orderStatistics = jdbcTemplate.update(sql_add_orderStatistics, sql_allClubTruePrice, sql_allHomeTruePrice, sql_allTruePrice, dayList.get(i).toString());
+                            int states_add_orderStatistics = jdbcTemplate.update(sql_add_orderStatistics, sql_allClubTruePrice, sql_allHomeTruePrice, sql_allTruePrice, dayList.get(i).toString(),creat_time);
                         }
 
                         if (nowYear.equals(year) && month == 13) {
@@ -628,23 +630,23 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                             } else {
                                 //没有创建
-                                String sql_addMonth = "insert into  yx_monthPrice(type,count,oneTruePrice,year,month) values(?,?,?,?,?)";
+                                String sql_addMonth = "insert into  yx_monthPrice(type,count,oneTruePrice,year,month,creat_time) values(?,?,?,?,?,?)";
                                 //获取循环时间的下一个月
 
                                 //会所添加
-                                int states_addClubMonth = jdbcTemplate.update(sql_addMonth, 0, clubMonthPrice_Count, clubMonthPrice_Price, dayYear, dayMonth);
+                                int states_addClubMonth = jdbcTemplate.update(sql_addMonth, 0, clubMonthPrice_Count, clubMonthPrice_Price, dayYear, dayMonth,creat_time);
                                 //居家添加
-                                int states_addHomeMonth = jdbcTemplate.update(sql_addMonth, 1, homeMonthPrice_Count, homeMonthPrice_Price, dayYear, dayMonth);
+                                int states_addHomeMonth = jdbcTemplate.update(sql_addMonth, 1, homeMonthPrice_Count, homeMonthPrice_Price, dayYear, dayMonth,creat_time);
 
                             }
 
                             //添加更新每天数据
-                            String sql_day_Month = "insert into  yx_dayPrice(type,count,oneTruePrice,year,month,day) values(?,?,?,?,?,?)";
+                            String sql_day_Month = "insert into  yx_dayPrice(type,count,oneTruePrice,year,month,day,creat_time) values(?,?,?,?,?,?,?)";
                             Integer day = Integer.valueOf(dayList.get(i).substring(8));
 
-                            int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, dayYear, dayMonth, day);
+                            int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, dayYear, dayMonth, day,creat_time);
 
-                            int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, dayYear, dayMonth, day);
+                            int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, dayYear, dayMonth, day,creat_time);
 
 
                         }
@@ -752,7 +754,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
                                 yearMonthList= getYearMonth(year, month);
                             }
                             List<String> moList = getDays(yearMonthList.get(0), yearMonthList.get(1));
-                            String sql_day_Month = "insert into  yx_dayPrice(type,count,oneTruePrice,year,month,day) values(?,?,?,?,?,?)";
+                            String sql_day_Month = "insert into  yx_dayPrice(type,count,oneTruePrice,year,month,day,creat_time) values(?,?,?,?,?,?,?)";
                             for (int i = 0; i < moList.size(); i++) {
 
                                 List<String> queryMoList = new ArrayList<>();
@@ -782,18 +784,18 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                                 if (month==nowMonth){
                                     if (i<moList.size()-1){
-                                        int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day);
+                                        int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day,creat_time);
 
-                                        int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day);
+                                        int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day,creat_time);
                                     }else {
 
                                     }
 
                                 }else {
 
-                                    int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day);
+                                    int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day,creat_time);
 
-                                    int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day);
+                                    int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day,creat_time);
                                 }
 
 
@@ -826,7 +828,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
             }
             if (!year.equals(nowYear)) {
                 //不是本年 且搜索月份为空
-                String sql_day_Month = "insert into  yx_dayPrice(type,count,oneTruePrice,year,month,day) values(?,?,?,?,?,?)";
+                String sql_day_Month = "insert into  yx_dayPrice(type,count,oneTruePrice,year,month,day,creat_time) values(?,?,?,?,?,?,?)";
 
                 if (month != 13) {
                     //搜索月份不为空
@@ -881,7 +883,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
                             Integer clubListCount = clubNowMonthMap.get("clubCount");
 
 
-                            int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day);
+                            int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day,creat_time);
 
 
                             Map<String, Integer> homeNowMonthMap = homePriceCount(sb_price_home_month.toString(), moList.get(i), moList.get(i), nowTime, queryMoList, sb_homeCount.toString(), count_queryMoList);
@@ -889,7 +891,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
                             Integer home_sumTruePrice = homeNowMonthMap.get("homePrice");
                             Integer homeListCount = homeNowMonthMap.get("homeCount");
 
-                            int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day);
+                            int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day,creat_time);
 
                             Map<String, Object> monthClubProfitTrendMap = new HashedMap();
                             monthClubProfitTrendMap.put("count", clubListCount);
@@ -974,9 +976,9 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                 }
 
-                String sql_add_homeMonth = "insert into  yx_monthPrice(type,count,oneTruePrice,year,month) values(?,?,?,?,?)";
+                String sql_add_homeMonth = "insert into  yx_monthPrice(type,count,oneTruePrice,year,month,creat_time) values(?,?,?,?,?,?)";
                 //type=0 会所
-                int states_add_clubMonth = jdbcTemplate.update(sql_add_homeMonth, 0, clubListCount, sumTruePrice, yearQuery, monthQuery);
+                int states_add_clubMonth = jdbcTemplate.update(sql_add_homeMonth, 0, clubListCount, sumTruePrice, yearQuery, monthQuery,creat_time);
                 sql_allClubTruePrice = sql_allClubTruePrice + sumTruePrice;
 
             }
@@ -1032,9 +1034,9 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                 }
 
-                String sql_add_homeMonth = "insert into  yx_monthPrice(type,count,oneTruePrice,year,month) values(?,?,?,?,?)";
+                String sql_add_homeMonth = "insert into  yx_monthPrice(type,count,oneTruePrice,year,month,creat_time) values(?,?,?,?,?,?)";
                 //type=1 居家
-                int states_add_homeMonth = jdbcTemplate.update(sql_add_homeMonth, 1, homeListCount, sumTruePrice, yearQuery, monthQuery);
+                int states_add_homeMonth = jdbcTemplate.update(sql_add_homeMonth, 1, homeListCount, sumTruePrice, yearQuery, monthQuery,creat_time);
                 //存入数据库居家收益
                 sql_allHomeTruePrice = sql_allHomeTruePrice + sumTruePrice;
 
@@ -1046,8 +1048,8 @@ public class StatisticsDaoImpl implements StatisticsDao {
             String yesterday = getNewEndtime(nowTime, 1);
             sql_allTruePrice = sql_allClubTruePrice + sql_allHomeTruePrice;
 
-            String sql_add_orderStatistics = "insert into yx_orderStatistics(club,home,allPrice,s_time) values(?,?,?,?)";
-            int states_add_orderStatistics = jdbcTemplate.update(sql_add_orderStatistics, sql_allClubTruePrice, sql_allHomeTruePrice, sql_allTruePrice, yesterday);
+            String sql_add_orderStatistics = "insert into yx_orderStatistics(club,home,allPrice,s_time,creat_time) values(?,?,?,?,?)";
+            int states_add_orderStatistics = jdbcTemplate.update(sql_add_orderStatistics, sql_allClubTruePrice, sql_allHomeTruePrice, sql_allTruePrice, yesterday,creat_time);
 
             //会所显示收益
             allClubTruePrice = sql_allClubTruePrice + club_oneSumTruePrice;
@@ -1076,7 +1078,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
             } else {
                 for (int i = 0; i < day; i++) {
-                    if (monthHomeProfitTrend.size() == i + 1) {
+                    if ( i + 1<=monthHomeProfitTrend.size() ) {
                     } else {
                         //月份没有全部添0补充
                         Map<String, Object> monthClubProfitTrendMap = new HashedMap();
@@ -1099,7 +1101,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
             } else {
                 for (int i = 0; i < 12; i++) {
-                    if (monthHomeProfitTrend.size() == i + 1) {
+                    if (i + 1<=monthHomeProfitTrend.size() ) {
                     } else {
                         //月份没有全部添0补充
                         Map<String, Object> monthClubProfitTrendMap = new HashedMap();
@@ -1353,8 +1355,8 @@ public class StatisticsDaoImpl implements StatisticsDao {
         // 一天的毫秒数
        // long daySpan = 24 * 60 * 60 * 1000;
 
-        //10天
-        long daySpan = 10 *24 * 60 * 60 * 1000;
+        //7天
+        long daySpan = 7 *24 * 60 * 60 * 1000;
         // 规定的每天时间02:00:00运行
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 02:00:00");
         // 首次运行时间
@@ -1401,7 +1403,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                 }
             };
-            // 以每10天执行一次
+            // 以每7天执行一次
             t.schedule(task, startTime, daySpan);
         } catch (Exception e) {
             e.printStackTrace();

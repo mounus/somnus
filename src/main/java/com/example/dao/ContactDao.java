@@ -15,20 +15,20 @@ public interface ContactDao {
      * @param: contact
      * @return:
      */
-    int save(Contact contact);
+    int save(Contact contact);//del
     /**
      * @description: 向表中插入一条数据
      * @param: contact
      * @return:
      */
-    int update(Contact contact);
+    int update(Contact contact);//del
     /**
      *
      * @description: 导出全部数据
      * @param: contact
      * @return:
      */
-    List<Integer> outExcel(String somnus,String agent,String grade);
+    List<Integer> outExcel(String somnus,String agent,String grade);//del
 
     /**
      *
@@ -36,7 +36,7 @@ public interface ContactDao {
      * @param: contact
      * @return:
      */
-    List<Map<String,Object>> outExcelById(Integer id);
+    List<Map<String,Object>> outExcelById(Integer id);//del
 
 
 }
