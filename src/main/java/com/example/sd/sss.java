@@ -26,19 +26,15 @@ public class sss  {
 
         public static void main(String[] args) {
 
-
-          int a=1;
-          int b=1;
-          int c=0;
-          if (a==1){
-              c=1;
-              System.out.println("c = " + c);
-          }
-          if (b==1){
-              c=2;
-              
-          }
-            System.out.println("c = " + c);
+              Integer a=10;
+              Integer b=10;
+              Integer c=100;
+              Integer d=100;
+              if (a==b&&c==d){
+                  System.out.println("11111111111111= " );
+              }else {
+                  System.out.println("2222222222= " );
+              }
 
     }
 

@@ -1807,9 +1807,8 @@ public class CustomAdminDaoImpl implements CustomAdminDao {
                                 mp.put("oid", rs.getInt("id"));
                                 mp.put("zodiac", rs.getString("zodiac"));
                                 mp.put("constellation", rs.getString("constellation"));
-                                mp.put("grade", "P1");
+                                mp.put("grade", rs.getString("grade"));
 
-                                //  mp.put("grade", rs.getString("grade"));
                                 mp.put("phone", rs.getString("phone"));
                                 mp.put("photo", rs.getString("photo"));
                                 mp.put("isorder", rs.getInt("isorder"));

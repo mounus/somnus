@@ -9,6 +9,7 @@ import com.example.entiy.Score;
 import lombok.SneakyThrows;
 import net.sf.json.JSONArray;
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.jasper.runtime.JspSourceDependent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -22,13 +23,15 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 
+import static com.example.util.HolidyUtil.getNewEndtime;
+import static com.example.util.MonthUtil.dayByMonth;
 import static com.example.util.MonthUtil.daysBetween;
 import static com.example.util.NumberUtil.getNumber;
 import static com.example.util.PageUtil.getPage;
 import static com.example.util.PeriodUtil.*;
 import static com.example.util.PriceUtil.getDayList;
 import static com.example.util.PriceUtil.getOneMatornDay;
-import static com.example.util.TimeUtil.getOneAllMonth;
+import static com.example.util.TimeUtil.*;
 import static com.example.util.Year.getConstellation;
 import static com.example.util.Year.getYear;
 
@@ -340,11 +343,51 @@ public class BussinessDaoImpl implements BussinessDao {
         return map;
     }
 
+    public List<Map<String, Object>> dayList(Integer mid, Integer year, Integer month,String nowTime) {
+        StringBuffer sb_period = new StringBuffer();
+        sb_period.append("select arrival_time,confirm_time,order_states from yx_order where mid=? ");
+        sb_period.append("  and order_states>=2   and  (   (arrival_time>=?  and arrival_time<=?) or (confirm_time>=? and confirm_time<=?) or (?>=arrival_time and confirm_time>=?) )  ");
+        List<String> queryList = new ArrayList<>();
+        queryList.add(mid.toString());
+        List<String> dayMonthList = getYearMonth(year, month);
+        String monthFirst = dayMonthList.get(0);
+        String monthLast = dayMonthList.get(1);
+        queryList.add(monthFirst);
+        queryList.add(monthLast);
+        queryList.add(monthFirst);
+        queryList.add(monthLast);
+        queryList.add(monthFirst);
+        queryList.add(monthLast);
+        List<Map<String, Object>> dayList = this.jdbcTemplate.query(sb_period.toString(), new RowMapper<Map<String, Object>>() {
+            @SneakyThrows
+            @Override
+            public Map<String, Object> mapRow(ResultSet rs, int index) throws SQLException {
+                Map<String, Object> mp = new HashedMap();
+                String arrival_time = rs.getString("arrival_time");
+                String confirm_time = rs.getString("confirm_time");
+                Integer order_states = rs.getInt("order_states");
+                List<String> dayList = getOneMatornDay(order_states, monthFirst, monthLast, arrival_time, confirm_time, nowTime);
+                mp.put("day", dayList.size());
+                mp.put("dayList", dayList);
+                return mp;
+            }
+        }, queryList.toArray());
+        return dayList;
+    }
+
+
     @Override
     public Map<String, Object> oneMatornDetail(String json) {
         Map<String, Object> map = new HashedMap();
         JSONObject jsonObject = JSON.parseObject(json);//转换类型
         Integer mid = jsonObject.getInteger("mid");
+        Integer year = jsonObject.getInteger("year");
+        Integer month = jsonObject.getInteger("month");
+
+        //搜索月份的月头和月尾
+        List<String> list = getYearMonth(year, month);
+        //搜索月份有多少天
+        Integer monthDay = dayByMonth(year, month);
 
 
         //详情资料
@@ -367,8 +410,8 @@ public class BussinessDaoImpl implements BussinessDao {
                 mp.put("constellation", rs.getString("constellation"));
                 mp.put("grade", rs.getString("grade"));
                 mp.put("trueday", rs.getInt("trueday"));
-
-
+                mp.put("month", rs.getString("month"));
+                mp.put("period", rs.getString("period"));
                 String h = rs.getString("household");
                 String household = "";
                 if (h.length() > 3) {
@@ -418,26 +461,85 @@ public class BussinessDaoImpl implements BussinessDao {
             map.put("scoreList", scoreList);
         }
 
-        //服务档期
-        List<Map<String, Object>> periodList = new ArrayList<>();
-        map.put("periodList", periodList);
-
 
         SimpleDateFormat time = new SimpleDateFormat("yyyy-MM-dd");//设置日期格式
         String nowTime = time.format(new Date());
-        Integer year = Integer.valueOf(nowTime.substring(0, 4));
 
+        String sql_service_count = "select count(*) from yx_order where order_states>=2 and mid=?";
+        Integer service_count = jdbcTemplate.queryForObject(sql_service_count, Integer.class, mid);
+
+        //服务档期
+        List<Map<String, Object>> periodList = new ArrayList<>();
+        Map<String, Object> periodMap = new HashedMap();
+
+        //日历集合
+        List<Map<String, Object>> peList = new ArrayList<>();
+        if (matornlist.get(0).get("period") == null || matornlist.get(0).get("period") == null) {
+            //没有设置服务档期
+            peList.addAll(lastMonth(list));
+            peList.addAll(onMonth(list, monthDay));
+            peList.addAll(nextMonth(list, peList.size()));
+
+            periodMap.put("period", peList);
+            periodMap.put("isService", 0);//可服务天数
+            periodMap.put("served", 0);//已服务天数
+        } else {
+            //有服务档期
+
+            String sql_period = "select period from yx_period where mid=?";
+            String period = jdbcTemplate.queryForObject(sql_period, String.class, mid);
+
+            if (service_count > 0) {
+                //有服务天数
+
+                //搜索月份已服务服务天数
+                List<Map<String,Object>> nowList=dayList(mid,year,month,nowTime);
+                
+                Map<String,Integer> lastMap=lastMonth(year,month,1);
+                Integer lastYear= lastMap.get("lastYear");
+                Integer lastMonth= lastMap.get("lastMonth");
+                //搜索月份上一个月的已服务
+                List<Map<String,Object>> lastList=dayList(mid,lastYear,lastMonth,nowTime);
+
+                Map<String,Integer> nextMap=lastMonth(year,month,-1);
+                Integer nextYear= nextMap.get("lastYear");
+                Integer nextMonth= nextMap.get("lastMonth");
+                //搜索月份上一个月的已服务
+                List<Map<String,Object>> nextList=dayList(mid,nextYear,nextMonth,nowTime);
+                
+                peList = newServedList( nowList,lastList,nextList,period,month,year);
+                Integer served = 0;
+                for (int i = 0; i < nowList.size(); i++) {
+                    served = served + Integer.valueOf(nowList.get(i).get("day").toString());
+                }
+                periodMap.put("served", served);//已服务天数
+                periodMap.put("period",peList);
+                periodMap.put("isService", dayCount(period, month,year));//可服务天数
+            } else {
+                //没有服务天数
+                peList = newList(year,month, period, list, monthDay);
+                periodMap.put("period", peList);
+                periodMap.put("served", 0);//已服务天数
+                periodMap.put("isService", dayCount(period, month,year));//可服务天数
+
+            }
+
+
+        }
+        periodList.add(periodMap);
+        map.put("periodList", periodList);
+
+
+        Integer nowYear = Integer.valueOf(nowTime.substring(0, 4));
         //服务记录
         List<Map<String, Object>> serviceList = new ArrayList<>();
-        String sql_service_count = "select count(*) from yx_order where order_states>=2 and mid=?";
-        int service_count = jdbcTemplate.queryForObject(sql_service_count, Integer.class, mid);
+
         if (service_count > 0) {
             StringBuffer sb_order = new StringBuffer();
             sb_order.append("select c.id,c.bid,o.o_number,o.arrival_time,o.confirm_time,o.order_day,");
             sb_order.append("o.wages_remarks,o.order_states ");
             sb_order.append(" from yx_custom c left join yx_order o on (c.id=o.cid) ");
             sb_order.append(" where  o.id=(select max(id) from yx_order where order_states>=2 and  mid=?)");
-
             Map<String, Object> serviceMap = new HashedMap();
             List<Map<String, Object>> orderList = this.jdbcTemplate.query(sb_order.toString(), new RowMapper<Map<String, Object>>() {
                 @SneakyThrows
@@ -453,14 +555,22 @@ public class BussinessDaoImpl implements BussinessDao {
                     mp.put("wages_remarks", rs.getString("wages_remarks"));
                     if (rs.getInt("order_states") == 2) {
                         mp.put("order_states", rs.getInt("order_states"));
-                        mp.put("day", daysBetween(rs.getString("arrival_time"), nowTime));
+                        try {
+                            mp.put("day", daysBetween(rs.getString("arrival_time"), nowTime));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                     }
                     if (rs.getInt("order_states") == 3) {
                         mp.put("order_states", rs.getInt("order_states"));
                         mp.put("confirm_time", rs.getString("confirm_time"));
                         mp.put("order_day", rs.getInt("order_day"));
                         mp.put("returnType", "正常回岗");
-                        mp.put("day", daysBetween(rs.getString("confirm_time"), nowTime));
+                        try {
+                            mp.put("day", daysBetween(rs.getString("confirm_time"), nowTime));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
                     }
 
 
@@ -469,13 +579,12 @@ public class BussinessDaoImpl implements BussinessDao {
             }, mid);
             serviceMap.put("orderList", orderList);
 
-            List<List> dayList = getOneAllMonth(year);
+            List<List> dayList = getOneAllMonth(nowYear);
             StringBuffer sb_month = new StringBuffer();
-            List<Map<String, Object>> monthList = new ArrayList<>();
-            Integer allCount = 0;
             sb_month.append("select arrival_time,confirm_time,order_states from yx_order where mid=? ");
             sb_month.append("  and order_states>=2   and  (   (arrival_time>=?  and arrival_time<=?) or (confirm_time>=? and confirm_time<=?) or (?>=arrival_time and confirm_time>=?) )  ");
-            System.out.println("sb_month = " + sb_month);
+            List<Map<String, Object>> monthList = new ArrayList<>();
+            Integer allCount = 0;
             for (int i = 0; i < 12; i++) {
                 List<String> queryList = new ArrayList<>();
                 queryList.add(mid.toString());
@@ -521,6 +630,7 @@ public class BussinessDaoImpl implements BussinessDao {
             map.put("serviceList", serviceList);
 
         } else {
+
             map.put("serviceList", serviceList);
         }
 
@@ -741,31 +851,79 @@ public class BussinessDaoImpl implements BussinessDao {
         int states_c = jdbcTemplate.update(sql_c, matornDto.getPhone(), matornDto.getBank_card(), matornDto.getBank_name(),
                 matornDto.getEmergency_person(), matornDto.getEmergency_phone(), matornDto.getMid());
 
-        String sql_o= "update  yx_origin set source=?,institution_name=?,witness=?,witness_phone=?,other=?,introducer=?,introducer_phone=? where mid=?";
-        int states_o=jdbcTemplate.update(sql_o,matornDto.getSource(),matornDto.getInstitution_name(),matornDto.getWitness(),matornDto.getWitness_phone(),
-                matornDto.getOther(),matornDto.getIntroducer(),matornDto.getIntroducer_phone(),matornDto.getMid());
+        String sql_o = "update  yx_origin set source=?,institution_name=?,witness=?,witness_phone=?,other=?,introducer=?,introducer_phone=? where mid=?";
+        int states_o = jdbcTemplate.update(sql_o, matornDto.getSource(), matornDto.getInstitution_name(), matornDto.getWitness(), matornDto.getWitness_phone(),
+                matornDto.getOther(), matornDto.getIntroducer(), matornDto.getIntroducer_phone(), matornDto.getMid());
 
-        String sql_b= "update  yx_bussiness set photo=?,charact=?,work_age=?,works=?,trains=?,qualification=?,identity=?,heathly=? where mid=?";
-       int states_b=jdbcTemplate.update(sql_b,matornDto.getPhoto(),matornDto.getCharacter(),matornDto.getWork_age(),matornDto.getWorks(),
-               matornDto.getTrains(),matornDto.getQualification(),matornDto.getIdentity(),matornDto.getHeathly(),matornDto.getMid());
+        String sql_b = "update  yx_bussiness set photo=?,charact=?,work_age=?,works=?,trains=?,qualification=?,identity=?,heathly=? where mid=?";
+        int states_b = jdbcTemplate.update(sql_b, matornDto.getPhoto(), matornDto.getCharacter(), matornDto.getWork_age(), matornDto.getWorks(),
+                matornDto.getTrains(), matornDto.getQualification(), matornDto.getIdentity(), matornDto.getHeathly(), matornDto.getMid());
 
-       if (states_m>0&&states_c>0&&states_o>0&&states_b>0){
-           return 1;
-       }else {
-           return 0;
-       }
+        if (states_m > 0 && states_c > 0 && states_o > 0 && states_b > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     @Override
     public int updateScore(Score score) {
 
-        String sql="update yx_score set background=?,appearance=?,communicate=?,nurse=?,breast_fed=?,confinement=?,postpartum=?,intelligence=?,psychology=?,know=?,total=?,comment=? where mid=?";
-        int states=this.jdbcTemplate.update(sql,score.getBackground(),score.getAppearance(),score.getCommunicate(),score.getNurse(),score.getBreast_fed(),
-                score.getConfinement(),score.getPostpartum(),score.getIntelligence(),score.getPostpartum(),score.getKnow(),score.getTotal(),score.getComment(),score.getMid());
-        if (states>0){
+        String sql = "update yx_score set background=?,appearance=?,communicate=?,nurse=?,breast_fed=?,confinement=?,postpartum=?,intelligence=?,psychology=?,know=?,total=?,comment=? where mid=?";
+        int states = this.jdbcTemplate.update(sql, score.getBackground(), score.getAppearance(), score.getCommunicate(), score.getNurse(), score.getBreast_fed(),
+                score.getConfinement(), score.getPostpartum(), score.getIntelligence(), score.getPostpartum(), score.getKnow(), score.getTotal(), score.getComment(), score.getMid());
+        if (states > 0) {
             return 1;
-        }else {
+        } else {
             return 0;
         }
     }
+
+    @Override
+    public int updatePeriod(String json) {
+
+        JSONObject jsonObject = JSON.parseObject(json);//转换类型
+        Integer mid = jsonObject.getInteger("mid");
+        String period = jsonObject.getString("period");
+        System.out.println("period = " + period);
+        String month = null;
+        String sql_oldPeriod = "select period from yx_period where mid=?";
+        String oldPeriod = jdbcTemplate.queryForObject(sql_oldPeriod, String.class, mid);
+
+        String sql = "update yx_period set period=? ,month=? where mid=? ";
+        int states_period = 0;
+        if (oldPeriod == null || oldPeriod == "") {
+            //没有添加月嫂档期
+            states_period = jdbcTemplate.update(sql, period, month, mid);
+
+        } else {
+            //之前添加过月嫂档期
+        }
+
+
+        if (states_period > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+
+    }
+
+    @Override
+    public int addPhoto(String json) {
+        JSONObject jsonObject = JSON.parseObject(json);//转换类型
+        Integer mid = jsonObject.getInteger("mid");
+        String evaluate_photo = jsonObject.getString("evaluate_photo");
+        String sql = "insert into yx_evaluate(mid,evaluate_photo)" +
+                "values(?,?)";
+        int states = jdbcTemplate.update(sql, mid, evaluate_photo);
+        if (states > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+
+    }
+
+
 }

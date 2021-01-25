@@ -181,6 +181,7 @@ public class BussinessController {
     @ApiOperation("月嫂小程序搜索筛选条件")
     @RequestMapping(value ="/bussinessCondition", method = RequestMethod.POST)
     public Map<String,Object> bussinessCondition(){
+
         return  bussinessService.bussinessCondition();
     }
     /**
@@ -191,6 +192,9 @@ public class BussinessController {
     @ApiOperation("一个月嫂的详情")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "mid", value = "月嫂id", required = false, dataType = "Integer", paramType = "query"),
+            @ApiImplicitParam(name = "year", value = "年份", required = false, dataType = "Integer", paramType = "query"),
+            @ApiImplicitParam(name = "month", value = "月份", required = false, dataType = "Integer", paramType = "query"),
+            @ApiImplicitParam(name = "period", value = "档期", required = false, dataType = "Integer", paramType = "query"),
     })
     @RequestMapping(value ="/oneMatornDetail", method = RequestMethod.POST)
     public Map<String,Object> oneMatornDetail(@RequestBody String json){
@@ -255,5 +259,31 @@ public class BussinessController {
     @RequestMapping(value ="/updateScore", method = RequestMethod.POST)
     public int  updateScore(@RequestBody Score score){
         return  bussinessService.updateScore(score);
+    }
+    /**
+     * * @author Somnus
+     *     @return
+     */
+    @ApiOperation("修改月嫂档期")
+    @RequestMapping(value ="/updatePeriod", method = RequestMethod.POST)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "mid", value = "月嫂id", required = false, dataType = "Integer", paramType = "query"),
+            @ApiImplicitParam(name = "period", value = "月嫂档期", required = false, dataType = "Integer", paramType = "query"),
+    })
+    public int  updatePeriod(@RequestBody String json){
+        return  bussinessService.updatePeriod(json);
+    }
+    /**
+     * * @author Somnus
+     *     @return
+     */
+    @ApiOperation("添加月嫂服务照片")
+    @RequestMapping(value ="/addPhoto", method = RequestMethod.POST)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "mid", value = "月嫂id", required = false, dataType = "Integer", paramType = "query"),
+            @ApiImplicitParam(name = "evaluate_photo", value = "服务照片", required = false, dataType = "Integer", paramType = "query"),
+    })
+    public int  addPhoto(@RequestBody String json){
+        return  bussinessService.addPhoto(json);
     }
 }

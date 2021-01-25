@@ -88,4 +88,14 @@ public class BussinessServiceImpl implements BussinessService {
     public int updateScore(Score score) {
         return bussinessDao.updateScore(score);
     }
+
+    @Override
+    public int updatePeriod(String json) {
+        return bussinessDao.updatePeriod(json);
+    }
+
+    @Override
+    public int addPhoto(String json) {
+        return bussinessDao.addPhoto(json);
+    }
 }

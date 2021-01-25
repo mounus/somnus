@@ -110,6 +110,18 @@ public interface BussinessDao {
      * @return:
      */
     int updateScore(Score score );
+    /**
+     * @description: 修改档期
+     * @param:
+     * @return:
+     */
+    int updatePeriod(String json );
+    /**
+     * @description: 添加服务照片
+     * @param:
+     * @return:
+     */
+    int addPhoto(String json );
 
 
 }
