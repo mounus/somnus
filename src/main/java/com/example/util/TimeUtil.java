@@ -7,6 +7,7 @@ import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 
+import java.text.NumberFormat;
 import java.util.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -352,7 +353,6 @@ public class TimeUtil {
     }
 
 
-
     /**
      * 搜索月份的档期第一天不是这个月的第一天
      * <p>
@@ -402,7 +402,7 @@ public class TimeUtil {
                 Integer lastMonth = Integer.valueOf(lastMap.get("lastMonth").toString());
                 Integer lastYear = Integer.valueOf(lastMap.get("lastYear").toString());
                 //搜索月份上一个月的档期
-                if (kMonth == lastMonth&&kYear==lastYear) {
+                if (kMonth.equals(lastMonth) && kYear.equals(lastYear)) {
                     Map<String, Object> kMap = new HashedMap();
                     if (timeSize(k, yesterday) == 1 && !k.equals(yesterday)) {
                         kMap.put(k, m.get(k));
@@ -414,7 +414,7 @@ public class TimeUtil {
                 }
 
                 //搜索月份的档期
-                if (kMonth == month&&kYear == year) {
+                if (kMonth.equals(month) && kYear.equals(year)) {
                     Map<String, Object> kMap = new HashedMap();
                     if (timeSize(k, yesterday) == 1 && !k.equals(yesterday)) {
                         kMap.put(k, m.get(k));
@@ -427,9 +427,10 @@ public class TimeUtil {
 
                 Map<String, Integer> nextMap = lastMonth(year, month, -1);
                 Integer nextMonth = Integer.valueOf(nextMap.get("lastMonth").toString());
-                Integer nextYear= Integer.valueOf(nextMap.get("lastYear").toString());
+                Integer nextYear = Integer.valueOf(nextMap.get("lastYear").toString());
                 //搜索月份下一个的档期
-                if (kMonth == nextMonth&&kYear==nextYear) {
+                //  if (kMonth == nextMonth && kYear == nextYear) {
+                if (kMonth.equals(month) && kYear.equals(nextYear)) {
                     Map<String, Object> kMap = new HashedMap();
                     if (timeSize(k, yesterday) == 1 && !k.equals(yesterday)) {
                         kMap.put(k, m.get(k));
@@ -446,11 +447,7 @@ public class TimeUtil {
         map.put("lastPeriodList", lastPeriodList);
         map.put("nowPeriodList", nowPeriodList);
         map.put("nextPeriodList", nextPeriodList);
-        System.out.println("lastPeriodList = " + lastPeriodList);
 
-        System.out.println("nowPeriodList = " + nowPeriodList);
-        System.out.println("nextPeriodList = " + nextPeriodList);
-        
         return map;
 
     }
@@ -539,7 +536,7 @@ public class TimeUtil {
      * @return
      */
     @SneakyThrows
-    public static Integer dayCount(String period, Integer month,Integer year) {
+    public static Integer dayCount(String period, Integer month, Integer year) {
         List<Map<String, Object>> periodList = JSONArray.fromObject(period);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String nowTime = simpleDateFormat.format(new Date());
@@ -552,7 +549,7 @@ public class TimeUtil {
                 Integer kYear = getYear(kTime);
                 //搜索月份的档期
                 Map<String, Object> kMap = new HashedMap();
-                if (kMonth == month&& kYear==year) {
+                if (kMonth.equals(month) && kYear.equals(year)) {
                     if (timeSize(k, nowTime) == 1 && !k.equals(nowTime)) {
                         kMap.put(k, m.get(k));
                         countList.add(kMap);
@@ -614,7 +611,6 @@ public class TimeUtil {
     public static List<Map<String, Object>> twoList(List<Map<String, Object>> fList, List<Map<String, Object>> sList) {
         List<Map<String, Object>> list = new ArrayList<>();
         List<String> strList = new ArrayList<>();
-
         if (sList.size() > 0) {
             for (int i = 0; i < fList.size(); i++) {
                 for (int j = 0; j < sList.size(); j++) {
@@ -760,13 +756,9 @@ public class TimeUtil {
         allList.addAll(nullLastMonth);
 
 
-
         //搜索月份
-        System.out.println("nowPeriodList = " + nowPeriodList);
         List<Map<String, Object>> nowPeriodServed = twoList(nullNowMonth, nowPeriodList);
-        System.out.println("nowPeriodServed = " + nowPeriodServed);
         nowMonth = twoList(nowPeriodServed, nowServedList);
-        System.out.println("nowPeriodServed = " + nowPeriodServed);
         allList.addAll(nowMonth);
 
 
@@ -781,7 +773,82 @@ public class TimeUtil {
 
     }
 
+    /**
+     * 获取月嫂档期占比
+     *
+     * @param period
+     * @return
+     */
+    @SneakyThrows
+    public static List<Map<String, Object>> monthList(String period) {
+
+        List<Map<String, Object>> list = JSONArray.fromObject(period);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String nowTime = simpleDateFormat.format(new Date());
+        Integer year = Integer.valueOf(nowTime.substring(0, 4).toString());
+        Integer month = Integer.valueOf(nowTime.substring(5, 7).toString());
+        String yesterday = getNewEndtime(nowTime, 1);
+
+        // 创建一个数值格式化对象
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        // 设置精确到小数点后2位
+        numberFormat.setMaximumFractionDigits(1);
+
+        List<Map<String, Object>> monthList = new ArrayList<>();
+        Map<String, Object> monthMap = new LinkedHashMap<>();
+        for (int i = 0; i < 6; i++) {
+
+            List<String> countList = new ArrayList<>();
+            Map<String, Integer> lastMap = lastMonth(year, month, -i);
+            Integer lastMonth = Integer.valueOf(lastMap.get("lastMonth").toString());
+            Integer lastYear = Integer.valueOf(lastMap.get("lastYear").toString());
+            for (Map<String, Object> m : list) {
+                for (String k : m.keySet()) {
+                    Date kTime = simpleDateFormat.parse(k);
+                    Integer kMonth = getMonth(kTime);
+                    Integer kYear = getYear(kTime);
+                    Integer type = Integer.valueOf(m.get(k).toString());
+                    if (kYear.equals(lastYear) && kMonth.equals(lastMonth) && type == 3) {
+                        if (timeSize(k, yesterday) == 1 && !k.equals(yesterday)) {
+                            countList.add(k);
+                        } else {
+
+                        }
+                    } else {
+
+                    }
+
+                }
+
+            }
+            Integer count = countList.size();
+            Integer monthDay = dayByMonth(lastYear, lastMonth);
+            String result = numberFormat.format((float) count / (float) monthDay);
+            monthMap.put(lastMonth.toString(), result);
+        }
+        monthList.add(monthMap);
+        return monthList;
+    }
+
+    /**修改月嫂档期
+     *
+     *合并两个档期
+     * @param period 新的档期
+     * @param oldPeriod 旧的档期
+     * @return
+     */
+    public static List<Map<String, Object>> updatePeriodList(String period, String oldPeriod) {
+        List<Map<String, Object>> periodList = JSONArray.fromObject(period);
+
+        List<Map<String, Object>> oldPeriodList = JSONArray.fromObject(oldPeriod);
+
+        oldPeriodList.addAll(periodList);
+
+        List<Map<String,Object>> twoList=twoList(oldPeriodList,periodList);
+
+        return  twoList;
 
 
-
+    }
 }

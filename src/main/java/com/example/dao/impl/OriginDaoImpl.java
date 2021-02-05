@@ -64,12 +64,18 @@ public class OriginDaoImpl implements OriginDao {
         JSONObject jsonObject = JSON.parseObject(json);//转换类型
         Integer cid = jsonObject.getInteger("cid");
 
+        String sql_c = "delete from yx_custom where id=?";
+        int c = this.jdbcTemplate.update(sql_c, cid);
 
         String sql_od = "delete from yx_order_demand where cid=?";
         int od = this.jdbcTemplate.update(sql_od, cid);
 
         String sql_o = "delete from yx_order where cid=?";
         int o = this.jdbcTemplate.update(sql_o, cid);
+
+        String sql_m = "delete from yx_message where cid=?";
+        int m = this.jdbcTemplate.update(sql_m, cid);
+
 
         if (od > 0 && o > 0) {
             return 1;

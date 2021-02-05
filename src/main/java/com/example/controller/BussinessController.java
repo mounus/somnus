@@ -194,7 +194,6 @@ public class BussinessController {
             @ApiImplicitParam(name = "mid", value = "月嫂id", required = false, dataType = "Integer", paramType = "query"),
             @ApiImplicitParam(name = "year", value = "年份", required = false, dataType = "Integer", paramType = "query"),
             @ApiImplicitParam(name = "month", value = "月份", required = false, dataType = "Integer", paramType = "query"),
-            @ApiImplicitParam(name = "period", value = "档期", required = false, dataType = "Integer", paramType = "query"),
     })
     @RequestMapping(value ="/oneMatornDetail", method = RequestMethod.POST)
     public Map<String,Object> oneMatornDetail(@RequestBody String json){
@@ -239,6 +238,9 @@ public class BussinessController {
      */
     @ApiOperation("月嫂全部信息")
     @RequestMapping(value ="/getById", method = RequestMethod.POST)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "mid", value = "月嫂id", required = false, dataType = "Integer", paramType = "query"),
+    })
     public List<Map<String,Object>>  getById(@RequestBody String json){
         return  bussinessService.getById(json);
     }
@@ -285,5 +287,19 @@ public class BussinessController {
     })
     public int  addPhoto(@RequestBody String json){
         return  bussinessService.addPhoto(json);
+    }
+
+    /**
+     * * @author Somnus
+     *     @return
+     */
+    @ApiOperation("删除月嫂服务照片")
+    @RequestMapping(value ="/deletePhoto", method = RequestMethod.POST)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "photoList", value = "服务照片集合", required = false, dataType = "Integer", paramType = "query"),
+    })
+    public int  deletePhoto(@RequestBody String json){
+
+        return  bussinessService.deletePhoto(json);
     }
 }

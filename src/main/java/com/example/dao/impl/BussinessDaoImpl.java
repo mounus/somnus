@@ -6,6 +6,7 @@ import com.example.dao.BussinessDao;
 import com.example.dto.MatornDto;
 import com.example.entiy.Bussiness;
 import com.example.entiy.Score;
+import groovy.grape.GrapeIvy;
 import lombok.SneakyThrows;
 import net.sf.json.JSONArray;
 import org.apache.commons.collections.map.HashedMap;
@@ -175,7 +176,6 @@ public class BussinessDaoImpl implements BussinessDao {
 
         }
 
-
         if (number.equals("null") || number.isEmpty() || number == "" || number == null) {
 
         } else {
@@ -261,20 +261,45 @@ public class BussinessDaoImpl implements BussinessDao {
 
 
                 String month = rs.getString("month");
+//                //新的 2021年1月26日10:30:33
+//                Map<String, Object> periodMap = new HashMap<String, Object>();
+//                String newMap = "";
+//                if (month != null && month != "") {
+//                    if (rs.getInt("isorder") == 0) {
+//                        mp.put("isService", 2);//可服务
+//                    } else {
+//                        mp.put("isService", 3);//服务中
+//                    }
+//                    Map<String, Object> xxMap = getMonthMap(month);
+//                    newMap = "[" + xxMap + "]";
+//
+//
+//                    List<Map<String, Object>> clearPeriod = clearPeriod(rs.getString("period"));
+//
+//                    String sql_newMap = "update  yx_period set period=?,month=? where mid=?";
+//                    jdbcTemplate.update(sql_newMap, clearPeriod.toString(), newMap, rs.getInt("id"));
+//                    periodMap = monthDegrees(xxMap);
+//
+//                } else {
+//                    periodMap = getNull();
+//                    mp.put("isService", 1);//无档期
+//                }
+
+
+                //老的
                 Map<String, String> periodMap = new HashMap<String, String>();
-                String newmap = "";
+                String newMap = "";
                 if (month != null && month != "") {
                     if (rs.getInt("isorder") == 0) {
                         mp.put("isService", 2);//可服务
                     } else {
                         mp.put("isService", 3);//服务中
                     }
-
                     try {
-                        newmap = "[" + getNewMap(month) + "]";
+                        newMap = "[" + getNewMap(month) + "]";
                         String sql_newmap = "update  yx_period set month=? where mid=?";
-                        jdbcTemplate.update(sql_newmap, newmap, rs.getInt("id"));
-                        periodMap = getAll(newmap);
+                        jdbcTemplate.update(sql_newmap, newMap, rs.getInt("id"));
+                        periodMap = getAll(newMap);
 
                     } catch (ParseException e) {
                         e.printStackTrace();
@@ -283,8 +308,9 @@ public class BussinessDaoImpl implements BussinessDao {
                     periodMap = gNull();
                     mp.put("isService", 1);//无档期
                 }
-                mp.put("period", periodMap);
 
+
+                mp.put("period", periodMap);
                 String h = rs.getString("household");
                 String household = "";
                 if (h.length() > 3) {
@@ -343,7 +369,7 @@ public class BussinessDaoImpl implements BussinessDao {
         return map;
     }
 
-    public List<Map<String, Object>> dayList(Integer mid, Integer year, Integer month,String nowTime) {
+    public List<Map<String, Object>> dayList(Integer mid, Integer year, Integer month, String nowTime) {
         StringBuffer sb_period = new StringBuffer();
         sb_period.append("select arrival_time,confirm_time,order_states from yx_order where mid=? ");
         sb_period.append("  and order_states>=2   and  (   (arrival_time>=?  and arrival_time<=?) or (confirm_time>=? and confirm_time<=?) or (?>=arrival_time and confirm_time>=?) )  ");
@@ -384,6 +410,7 @@ public class BussinessDaoImpl implements BussinessDao {
         Integer year = jsonObject.getInteger("year");
         Integer month = jsonObject.getInteger("month");
 
+        System.out.println("22222222222222 = ");
         //搜索月份的月头和月尾
         List<String> list = getYearMonth(year, month);
         //搜索月份有多少天
@@ -493,34 +520,34 @@ public class BussinessDaoImpl implements BussinessDao {
                 //有服务天数
 
                 //搜索月份已服务服务天数
-                List<Map<String,Object>> nowList=dayList(mid,year,month,nowTime);
-                
-                Map<String,Integer> lastMap=lastMonth(year,month,1);
-                Integer lastYear= lastMap.get("lastYear");
-                Integer lastMonth= lastMap.get("lastMonth");
-                //搜索月份上一个月的已服务
-                List<Map<String,Object>> lastList=dayList(mid,lastYear,lastMonth,nowTime);
+                List<Map<String, Object>> nowList = dayList(mid, year, month, nowTime);
 
-                Map<String,Integer> nextMap=lastMonth(year,month,-1);
-                Integer nextYear= nextMap.get("lastYear");
-                Integer nextMonth= nextMap.get("lastMonth");
+                Map<String, Integer> lastMap = lastMonth(year, month, 1);
+                Integer lastYear = lastMap.get("lastYear");
+                Integer lastMonth = lastMap.get("lastMonth");
                 //搜索月份上一个月的已服务
-                List<Map<String,Object>> nextList=dayList(mid,nextYear,nextMonth,nowTime);
-                
-                peList = newServedList( nowList,lastList,nextList,period,month,year);
+                List<Map<String, Object>> lastList = dayList(mid, lastYear, lastMonth, nowTime);
+
+                Map<String, Integer> nextMap = lastMonth(year, month, -1);
+                Integer nextYear = nextMap.get("lastYear");
+                Integer nextMonth = nextMap.get("lastMonth");
+                //搜索月份上一个月的已服务
+                List<Map<String, Object>> nextList = dayList(mid, nextYear, nextMonth, nowTime);
+
+                peList = newServedList(nowList, lastList, nextList, period, month, year);
                 Integer served = 0;
                 for (int i = 0; i < nowList.size(); i++) {
                     served = served + Integer.valueOf(nowList.get(i).get("day").toString());
                 }
                 periodMap.put("served", served);//已服务天数
-                periodMap.put("period",peList);
-                periodMap.put("isService", dayCount(period, month,year));//可服务天数
+                periodMap.put("period", peList);
+                periodMap.put("isService", dayCount(period, month, year));//可服务天数
             } else {
                 //没有服务天数
-                peList = newList(year,month, period, list, monthDay);
+                peList = newList(year, month, period, list, monthDay);
                 periodMap.put("period", peList);
                 periodMap.put("served", 0);//已服务天数
-                periodMap.put("isService", dayCount(period, month,year));//可服务天数
+                periodMap.put("isService", dayCount(period, month, year));//可服务天数
 
             }
 
@@ -636,20 +663,21 @@ public class BussinessDaoImpl implements BussinessDao {
 
 
         //服务照片
-        List<String> evaluateList = new ArrayList<>();
+        List<Map<String, Object>> evaluateList = new ArrayList<>();
         String sql_evaluate_count = "select count(*) from yx_evaluate where mid=?";
         int evaluate_count = jdbcTemplate.queryForObject(sql_evaluate_count, Integer.class, mid);
         if (evaluate_count > 0) {
-            String sql_score = "select evaluate_photo from  yx_evaluate where mid=? order by id desc ";
+            String sql_score = "select id,evaluate_photo from  yx_evaluate where mid=? order by id desc ";
             List<Map<String, Object>> evaluate_photoList = jdbcTemplate.queryForList(sql_score, mid);
+
 
             for (int i = 0; i < evaluate_photoList.size(); i++) {
                 JSONArray jsonArray = JSONArray.fromObject(evaluate_photoList.get(i).get("evaluate_photo"));
                 List<String> photoList = (List) jsonArray;
-                for (int j = 0; j < photoList.size(); j++) {
-                    evaluateList.add(photoList.get(j).toString());
-                }
-
+                Map<String, Object> evaluateMap = new HashedMap();
+                evaluateMap.put("id", evaluate_photoList.get(i).get("id").toString());
+                evaluateMap.put("photo", photoList);
+                evaluateList.add(evaluateMap);
             }
             map.put("evaluateList", evaluateList);
         } else {
@@ -748,11 +776,13 @@ public class BussinessDaoImpl implements BussinessDao {
         sb.append("b.identity,b.qualification,b.heathly,b.photo,b.charact,b.work_age,b.works,b.trains");
         sb.append(" from yx_matorn m ");
         sb.append(" left JOIN yx_contact c on (m.id=c.mid) left JOIN yx_origin ori ON (m.id=ori.mid) left JOIN yx_bussiness b on (m.id=b.mid) where  b.isquit=0  and m.id = ?");
+        System.out.println("sb = " + sb);
         list = this.jdbcTemplate.query(sb.toString(), new RowMapper<Map<String, Object>>() {
             @Override
             public Map<String, Object> mapRow(ResultSet rs, int index) throws SQLException {
 
                 Map<String, Object> mp = new HashMap<String, Object>();
+
 
                 mp.put("source", rs.getString("source"));
                 mp.put("institution_name", rs.getString("institution_name"));
@@ -761,6 +791,14 @@ public class BussinessDaoImpl implements BussinessDao {
                 mp.put("other", rs.getString("other"));
                 mp.put("introducer", rs.getString("introducer"));
                 mp.put("introducer_phone", rs.getString("introducer_phone"));
+
+
+                mp.put("phone",rs.getString("phone"));
+                mp.put("bank_card",rs.getString("bank_card"));
+                mp.put("bank_name",rs.getString("bank_name"));
+                mp.put("emergency_person",rs.getString("emergency_person"));
+                mp.put("emergency_phone",rs.getString("emergency_phone"));
+
 
                 mp.put("name", rs.getString("name").toString());
                 mp.put("idcard", rs.getString("idcard"));
@@ -774,13 +812,6 @@ public class BussinessDaoImpl implements BussinessDao {
                 mp.put("height", rs.getString("height"));
                 mp.put("address", rs.getString("address"));
 
-                mp.put("source", rs.getString("source"));
-                mp.put("institution_name", rs.getString("institution_name"));
-                mp.put("witness", rs.getString("witness"));
-                mp.put("witness_phone", rs.getString("witness_phone"));
-                mp.put("other", rs.getString("other"));
-                mp.put("introducer", rs.getString("introducer"));
-                mp.put("introducer_phone", rs.getString("introducer_phone"));
 
                 mp.put("photo", rs.getString("photo"));
                 mp.put("character", rs.getString("charact"));
@@ -885,19 +916,25 @@ public class BussinessDaoImpl implements BussinessDao {
         JSONObject jsonObject = JSON.parseObject(json);//转换类型
         Integer mid = jsonObject.getInteger("mid");
         String period = jsonObject.getString("period");
-        System.out.println("period = " + period);
-        String month = null;
+
         String sql_oldPeriod = "select period from yx_period where mid=?";
         String oldPeriod = jdbcTemplate.queryForObject(sql_oldPeriod, String.class, mid);
 
         String sql = "update yx_period set period=? ,month=? where mid=? ";
+
         int states_period = 0;
         if (oldPeriod == null || oldPeriod == "") {
             //没有添加月嫂档期
+            List<Map<String, Object>> monthList = monthList(period);
+            String month = monthList.toString();
             states_period = jdbcTemplate.update(sql, period, month, mid);
-
         } else {
             //之前添加过月嫂档期
+            List<Map<String, Object>> newPeriodList = updatePeriodList(period, oldPeriod);
+            List<Map<String, Object>> monthList = monthList(newPeriodList.toString());
+            String month = monthList.toString();
+            states_period = jdbcTemplate.update(sql, newPeriodList.toString(), month, mid);
+
         }
 
 
@@ -926,4 +963,52 @@ public class BussinessDaoImpl implements BussinessDao {
     }
 
 
+    @Transactional
+    @Override
+    public int deletePhoto(String json) {
+        JSONObject jsonObject = JSON.parseObject(json);//转换类型
+        String photoList = jsonObject.getString("photoList");
+     //   String photoList ="[{id:\"3356\",photo:[\"0\"]}]";
+        List<Map<String, Object>> list = JSONArray.fromObject(photoList);
+
+        String sql_update = "update yx_evaluate set evaluate_photo=? where id=?";
+        String sql_delete = "delete from yx_evaluate where id=?";
+        String sql_select = "select evaluate_photo from yx_evaluate where id=? ";
+
+        int allStates=0;
+        for (int i = 0; i < list.size(); i++) {
+            List<String> pList = JSONArray.fromObject(list.get(i).get("photo"));
+            List<Map<String,Object>> ePhoto=jdbcTemplate.queryForList(sql_select,list.get(i).get("id"));
+            String strPhoto=ePhoto.get(0).get("evaluate_photo").toString();
+            List<String> sList= JSONArray.fromObject(strPhoto);
+            List<String> ssList=new ArrayList<>();
+            for (int j = 0; j <sList.size() ; j++) {
+                Integer jj=j;
+               if (pList.contains(jj.toString())){
+                   
+               }else {
+                   ssList.add("\""+sList.get(j)+"\"");
+               }
+
+            }
+
+           if (ssList.size()>0){
+               int states_update=jdbcTemplate.update(sql_update,ssList.toString(),list.get(i).get("id"));
+               allStates=allStates+states_update;
+           }else {
+               int states_delete=jdbcTemplate.update(sql_delete,list.get(i).get("id"));
+               allStates=allStates+states_delete;
+           }
+
+
+        }
+        if (list.size()==allStates){
+            return 1;
+        }else {
+            return 0;
+        }
+
+
+
+    }
 }

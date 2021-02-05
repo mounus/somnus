@@ -1,8 +1,10 @@
 package com.example.util;
 
+import lombok.SneakyThrows;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 
 import java.math.BigDecimal;
@@ -14,6 +16,8 @@ import java.util.*;
 import static com.example.util.HolidyUtil.getDays;
 import static com.example.util.HolidyUtil.getNewEndtime;
 import static com.example.util.MonthUtil.*;
+import static com.example.util.TimeUtil.getYearMonth;
+import static com.example.util.TimeUtil.parseDate;
 
 public class PeriodUtil {
 
@@ -82,22 +86,6 @@ public class PeriodUtil {
 
 
         return mon;
-    }
-
-    public static Map<String, String> gNull() {
-
-        Map<String, String> month = new HashMap<String, String>();
-        Calendar cale = null;
-        cale = Calendar.getInstance();
-        int m = cale.get(Calendar.MONTH) + 1;
-        for (int j = 0; j < 6; j++) {
-            int a = m + j;
-            String a1 = String.valueOf(a);
-            month.put(a1, "0");
-
-        }
-        return month;
-
     }
 
 
@@ -351,6 +339,21 @@ public class PeriodUtil {
         return period;
     }
 
+    public static Map<String, String> gNull() {
+
+        Map<String, String> month = new HashMap<String, String>();
+        Calendar cale = null;
+        cale = Calendar.getInstance();
+        int m = cale.get(Calendar.MONTH) + 1;
+        for (int j = 0; j < 6; j++) {
+            int a = m + j;
+            String a1 = String.valueOf(a);
+            month.put(a1, "0");
+
+        }
+        return month;
+
+    }
 
     /**
      * 新添加月嫂六个月月份占比month填充
@@ -434,5 +437,129 @@ public class PeriodUtil {
         return newmap;
     }
 
+    //之前档期处理的方法
+    //____________________________________________________________________
+
+
+    //现在的档期处理方法
+    //2021年1月26日09:06:54
+
+    /**
+     * 更新月嫂档期占比
+     *
+     * @param month
+     * @return
+     */
+    public static Map<String, Object> getMonthMap(String month) {
+        List<Map<String, Object>> monthList = JSONArray.fromObject(month);
+        Calendar cale = null;
+        cale = Calendar.getInstance();
+        //当前月份
+        int m = cale.get(Calendar.MONTH) + 1;
+        Map<String, Object> newMap = new LinkedHashMap<>();
+
+        Integer monthLast = m + 5;
+
+        String a3 = String.valueOf(monthLast);
+        int i = 0;
+        for (Map<String, Object> map : monthList) {
+            for (String k : map.keySet()) {
+                Integer a = m + i;
+                String a1 = String.valueOf(a);
+                if (a > monthLast) {
+                    newMap.put(a3, 0);
+                } else {
+                    if (String.valueOf(map.get(a1)).equals("null")) {
+                        newMap.put(a1, 0);
+                    } else {
+                        newMap.put(a1, map.get(a1));
+                    }
+
+                }
+                i = i + 1;
+
+            }
+        }
+        return newMap;
+
+    }
+
+
+    /**
+     * 获取月份占比度数
+     *
+     * @param map
+     * @return
+     */
+    public static Map<String, Object> monthDegrees(Map<String, Object> map) {
+
+        NumberFormat ns = NumberFormat.getNumberInstance();
+        ns.setMaximumFractionDigits(0);
+        Map<String, Object> newMap = new LinkedHashMap<>();
+        for (String k : map.keySet()) {
+            Double result = Double.parseDouble(map.get(k).toString()) * 360;
+            newMap.put(k, ns.format(result));
+        }
+        return newMap;
+    }
+
+    /**
+     * 月嫂没有档期 档期占比空白填充
+     *
+     * @return
+     */
+    public static Map<String, Object> getNull() {
+        Map<String, Object> month = new HashMap<String, Object>();
+        Calendar cale = null;
+        cale = Calendar.getInstance();
+        int m = cale.get(Calendar.MONTH) + 1;
+        for (int j = 0; j < 6; j++) {
+            Integer a = m + j;
+            if (a > 12) {
+                String a1 = String.valueOf(a - 12);
+                month.put(a1, "0");
+            } else {
+                month.put(a.toString(), "0");
+            }
+
+        }
+        return month;
+    }
+
+    /**
+     * 新的月嫂档期清理
+     * 清理上一月之前的档期
+     *
+     * @param period
+     * @return
+     */
+    @SneakyThrows
+    public static List<Map<String, Object>> clearPeriod(String period) {
+        List<Map<String, Object>> periodList = JSONArray.fromObject(period);
+
+        Calendar cale = null;
+        cale = Calendar.getInstance();
+        Integer month = cale.get(Calendar.MONTH) + 1;
+        Integer year = cale.get(Calendar.YEAR);
+
+        String time = getYearMonth(year, month).get(0);
+
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Map<String, Object> m : periodList) {
+            for (String k : m.keySet()) {
+                if (timeSize(k, time) == 1) {
+                    Map<String, Object> kMap = new HashedMap();
+                    String kTime = parseDate(k);
+                    kMap.put(kTime, m.get(k));
+                    list.add(kMap);
+                } else {
+
+                }
+            }
+        }
+
+        return list;
+    }
 
 }

@@ -721,7 +721,10 @@ public class CustomDaoImpl implements CustomDao {
         StringBuffer sb1 = new StringBuffer();
         sb1.append("select yx_matorn.id,yx_period.period,yx_bussiness.grade,yx_bussiness.isorder from yx_matorn left join yx_period on (yx_matorn.id=yx_period.mid)");
         sb1.append(" left join yx_bussiness on (yx_matorn.id=yx_bussiness.mid)");
-        sb1.append("where yx_bussiness.shelf=1 and yx_period.period is not null");
+       // sb1.append("where yx_bussiness.shelf=1 and yx_period.period is not null ");
+
+        //新的月嫂小程序档期存值不一致  2021年1月27日16:55:51
+        sb1.append("where yx_bussiness.shelf=1 and yx_period.period is not null and yx_matorn.id<>2311 and  yx_matorn.id<>2196");
         List<Object> queryList = new ArrayList<Object>();
         if (name == "" || name == null || name.isEmpty()) {
 

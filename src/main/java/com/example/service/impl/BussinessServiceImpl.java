@@ -98,4 +98,9 @@ public class BussinessServiceImpl implements BussinessService {
     public int addPhoto(String json) {
         return bussinessDao.addPhoto(json);
     }
+
+    @Override
+    public int deletePhoto(String json) {
+        return bussinessDao.deletePhoto(json);
+    }
 }

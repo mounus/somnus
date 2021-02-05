@@ -1089,7 +1089,7 @@ public class CustomAdminDaoImpl implements CustomAdminDao {
 
 
         //母婴顾问
-        String sql_bname = "select id,name from yx_user where power=4";
+        String sql_bname = "select id,name from yx_user where power=4 or power=20";
         List<Map<String, Object>> bnameList = this.jdbcTemplate.queryForList(sql_bname);
         map.put("bnameList", bnameList);
 
@@ -2365,6 +2365,18 @@ public class CustomAdminDaoImpl implements CustomAdminDao {
         sb.append("value(?,?,?,?,?)");
         if (somnus.equals("one")) {
             states = this.jdbcTemplate.update(sql, mid, 1, oid);
+
+            StringBuffer sb_saleOrder = new StringBuffer();
+            sb_saleOrder.append("insert into yx_saleOrder (cid,bid,saleType,confirmIntention,information,isRecommend,age,zodiac,educational,household,recommendNotes,isInterview,interviewType,interviewTime,creat_time)");
+            sb_saleOrder.append("value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+
+            String sql_saleOrder="select * from yx_saleOrder where id=(select max(id) from sql_saleOrder where cid=?)";
+            Map<String,Object> saleOrderMap=jdbcTemplate.queryForMap(sql_saleOrder,cid);
+            String confirmIntention="签单";
+
+            int states1 = this.jdbcTemplate.update(sb_saleOrder.toString(), cid,bid, saleOrderMap.get("saleType"), confirmIntention, saleOrderMap.get("confirmIntention"),saleOrderMap.get("isRecommend"), saleOrderMap.get("age"),
+                    saleOrderMap.get("zodiac"), saleOrderMap.get("educational"), saleOrderMap.get("household"), saleOrderMap.get("recommendNotes"), saleOrderMap.get("isInterview"), saleOrderMap.get("interviewType"),saleOrderMap.get("interviewTime") , nowTime);
+
 
         }
         if (somnus.equals("two")) {

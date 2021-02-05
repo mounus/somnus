@@ -546,6 +546,23 @@ public class StatisticsDaoImpl implements StatisticsDao {
                             //搜索时间这个月没有创建
                         }
                     }else {
+                        String sql_monthPriceCount = "select count(*) from yx_monthPrice where year=? and  month=? ";
+                        Integer monthPriceCount = jdbcTemplate.queryForObject(sql_monthPriceCount, Integer.class, dayYear, dayMonth);
+                        if (monthPriceCount > 0) {
+                            //搜索时间这个月已经创建
+                            String sql_clubMonthPrice = "select count,oneTruePrice from yx_monthPrice where type=0 and year=? and month=? ";
+                            monthClubProfitTrend = jdbcTemplate.queryForList(sql_clubMonthPrice, dayYear, dayMonth);
+                            clubMonthPrice_Count = Integer.valueOf(monthClubProfitTrend.get(monthClubProfitTrend.size() - 1).get("count").toString());
+                            clubMonthPrice_Price = Integer.valueOf(monthClubProfitTrend.get(monthClubProfitTrend.size() - 1).get("oneTruePrice").toString());
+
+                            String sql_homeMonthPrice = "select count,oneTruePrice from yx_monthPrice where type=1 and year=? and month=? ";
+                            monthHomeProfitTrend = jdbcTemplate.queryForList(sql_homeMonthPrice, dayYear, dayMonth);
+                            homeMonthPrice_Count = Integer.valueOf(monthHomeProfitTrend.get(monthHomeProfitTrend.size() - 1).get("count").toString());
+                            homeMonthPrice_Price = Integer.valueOf(monthHomeProfitTrend.get(monthHomeProfitTrend.size() - 1).get("oneTruePrice").toString());
+
+                        } else {
+                            //搜索时间这个月没有创建
+                        }
 
                     }
 
@@ -671,7 +688,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
                 //搜索年份是本年
                 if (month != 13) {
                     //搜索月份不为空
-                    String sql_count_dayPrice = "select count(*) from yx_dayPrice where year=? and month=?";
+                    String sql_count_dayPrice = "select count(*) from yx_dayPrice where type=0 and  year=? and month=?";
                     int states_count = jdbcTemplate.queryForObject(sql_count_dayPrice, Integer.class, year, month);
 
                     Integer daySize =0;
@@ -730,6 +747,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                         } else {
                             //搜索年份不是是当前年份本月
+
                             String sql_clubDayPrice = "select count,oneTruePrice from yx_dayPrice where type=0 and year=? and month=? ";
                             monthClubProfitTrend = jdbcTemplate.queryForList(sql_clubDayPrice, year, month);
 
@@ -742,7 +760,8 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                         if (month > nowMonth) {
                             //搜索时间月份 大于 当前时间月份
-
+                            monthClubProfitTrend.clear();
+                            monthHomeProfitTrend.clear();
                         } else {
                             //month<=nowMonth
                             List<String> yearMonthList = new ArrayList<>();
@@ -785,7 +804,6 @@ public class StatisticsDaoImpl implements StatisticsDao {
                                 if (month==nowMonth){
                                     if (i<moList.size()-1){
                                         int states_dayClub = jdbcTemplate.update(sql_day_Month, 0, clubListCount, club_sumTruePrice, year, month, day,creat_time);
-
                                         int states_dayHome = jdbcTemplate.update(sql_day_Month, 1, homeListCount, home_sumTruePrice, year, month, day,creat_time);
                                     }else {
 
@@ -1355,8 +1373,8 @@ public class StatisticsDaoImpl implements StatisticsDao {
         // 一天的毫秒数
        // long daySpan = 24 * 60 * 60 * 1000;
 
-        //7天
-        long daySpan = 7 *24 * 60 * 60 * 1000;
+        //10天
+        long daySpan = 10 *24 * 60 * 60 * 1000;
         // 规定的每天时间02:00:00运行
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd 02:00:00");
         // 首次运行时间
@@ -1403,7 +1421,7 @@ public class StatisticsDaoImpl implements StatisticsDao {
 
                 }
             };
-            // 以每7天执行一次
+            // 以每10天执行一次
             t.schedule(task, startTime, daySpan);
         } catch (Exception e) {
             e.printStackTrace();

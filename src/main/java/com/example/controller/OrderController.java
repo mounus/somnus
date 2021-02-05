@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping(value = "/wx/order", produces = "application/json;charset=utf-8")
 @Api(tags = "订单管理")
-public class OrderControlleer {
+public class OrderController {
     @Autowired(required = false)
     private OrderService orderService;
 

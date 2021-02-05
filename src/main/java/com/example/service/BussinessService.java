@@ -113,4 +113,10 @@ public interface BussinessService {
      * @return:
      */
     int addPhoto(String json );
+    /**
+     * @description: 删除服务照片
+     * @param:
+     * @return:
+     */
+    int deletePhoto(String json );
 }
